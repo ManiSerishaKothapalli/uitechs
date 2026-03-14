@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U&I Technologies - Sales & Service Management</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>U&I Technologies</h2>
+            <p>Sales & Service</p>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="nav-link active" data-page="dashboard">Dashboard</a></li>
+            <li><a href="#" class="nav-link" data-page="inventory">Inventory</a></li>
+            <li><a href="#" class="nav-link" data-page="sales">New Sale</a></li>
+            <li><a href="#" class="nav-link" data-page="invoices">Invoices</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <!-- Dashboard Page -->
+        <section id="page-dashboard" class="page active">
+            <h1>Dashboard</h1>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Products</h3>
+                    <p id="stat-total-products">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Laptops</h3>
+                    <p id="stat-laptops">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Desktops</h3>
+                    <p id="stat-desktops">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Spare Parts</h3>
+                    <p id="stat-parts">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Sales</h3>
+                    <p id="stat-total-sales">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Revenue</h3>
+                    <p id="stat-revenue">&#8377;0</p>
+                </div>
+            </div>
+            <div class="dashboard-sections">
+                <div class="recent-section">
+                    <h2>Recent Sales</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-sales-body"></tbody>
+                    </table>
+                </div>
+                <div class="recent-section">
+                    <h2>Low Stock Items</h2>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="low-stock-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory Page -->
+        <section id="page-inventory" class="page">
+            <div class="page-header">
+                <h1>Inventory</h1>
+                <button class="btn btn-primary" id="btn-add-product">+ Add Product</button>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" id="inventory-search" placeholder="Search products..." class="input-field">
+                <select id="inventory-filter" class="input-field">
+                    <option value="all">All Categories</option>
+                    <option value="Laptop">Laptops</option>
+                    <option value="Desktop">Desktops</option>
+                    <option value="RAM">RAM</option>
+                    <option value="Hard Disk">Hard Disk</option>
+                    <option value="SSD">SSD</option>
+                    <option value="Motherboard">Motherboard</option>
+                    <option value="Processor">Processor</option>
+                    <option value="Graphics Card">Graphics Card</option>
+                    <option value="Power Supply">Power Supply</option>
+                    <option value="Monitor">Monitor</option>
+                    <option value="Keyboard">Keyboard</option>
+                    <option value="Mouse">Mouse</option>
+                    <option value="Charger">Charger</option>
+                    <option value="Battery">Battery</option>
+                    <option value="Screen">Screen / Display</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Brand</th>
+                        <th>Model / Spec</th>
+                        <th>Purchase Price</th>
+                        <th>Selling Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body"></tbody>
+            </table>
+
+            <!-- Add/Edit Product Modal -->
+            <div id="product-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="product-modal-title">Add Product</h2>
+                        <button class="btn-close" id="close-product-modal">&times;</button>
+                    </div>
+                    <form id="product-form">
+                        <input type="hidden" id="product-id">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="product-name">Product Name *</label>
+                                <input type="text" id="product-name" class="input-field" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-category">Category *</label>
+                                <select id="product-category" class="input-field" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Laptop">Laptop</option>
+                                    <option value="Desktop">Desktop</option>
+                                    <option value="RAM">RAM</option>
+                                    <option value="Hard Disk">Hard Disk</option>
+                                    <option value="SSD">SSD</option>
+                                    <option value="Motherboard">Motherboard</option>
+                                    <option value="Processor">Processor</option>
+                                    <option value="Graphics Card">Graphics Card</option>
+                                    <option value="Power Supply">Power Supply</option>
+                                    <option value="Monitor">Monitor</option>
+                                    <option value="Keyboard">Keyboard</option>
+                                    <option value="Mouse">Mouse</option>
+                                    <option value="Charger">Charger</option>
+                                    <option value="Battery">Battery</option>
+                                    <option value="Screen">Screen / Display</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-brand">Brand</label>
+                                <input type="text" id="product-brand" class="input-field" placeholder="e.g. Dell, HP, Lenovo">
+                            </div>
+                            <div class="form-group">
+                                <label for="product-model">Model / Specification</label>
+                                <input type="text" id="product-model" class="input-field" placeholder="e.g. 8GB DDR4, i5 12th Gen">
+                            </div>
+                            <div class="form-group">
+                                <label for="product-serial">Serial Number</label>
+                                <input type="text" id="product-serial" class="input-field">
+                            </div>
+                            <div class="form-group">
+                                <label for="product-purchase-price">Purchase Price (&#8377;) *</label>
+                                <input type="number" id="product-purchase-price" class="input-field" min="0" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-selling-price">Selling Price (&#8377;) *</label>
+                                <input type="number" id="product-selling-price" class="input-field" min="0" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="product-stock">Stock Quantity *</label>
+                                <input type="number" id="product-stock" class="input-field" min="0" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="product-description">Description / Notes</label>
+                                <textarea id="product-description" class="input-field" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="cancel-product">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sales Page -->
+        <section id="page-sales" class="page">
+            <h1>New Sale</h1>
+            <div class="sale-form-container">
+                <div class="customer-section">
+                    <h2>Customer Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="customer-name">Customer Name *</label>
+                            <input type="text" id="customer-name" class="input-field" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-phone">Phone Number *</label>
+                            <input type="text" id="customer-phone" class="input-field" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer-email">Email</label>
+                            <input type="email" id="customer-email" class="input-field">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="customer-address">Address</label>
+                            <textarea id="customer-address" class="input-field" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="items-section">
+                    <h2>Sale Items</h2>
+                    <div class="add-item-row">
+                        <select id="sale-product-select" class="input-field">
+                            <option value="">Select Product</option>
+                        </select>
+                        <input type="number" id="sale-qty" class="input-field" placeholder="Qty" min="1" value="1">
+                        <input type="number" id="sale-discount" class="input-field" placeholder="Discount %" min="0" max="100" value="0">
+                        <button class="btn btn-primary" id="btn-add-sale-item">Add Item</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Discount</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sale-items-body"></tbody>
+                    </table>
+
+                    <div class="sale-summary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="sale-subtotal">&#8377;0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <label for="sale-tax">Tax (GST %):</label>
+                            <input type="number" id="sale-tax" class="input-field input-small" value="18" min="0" max="100">
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax Amount:</span>
+                            <span id="sale-tax-amount">&#8377;0.00</span>
+                        </div>
+                        <div class="summary-row total-row">
+                            <span>Grand Total:</span>
+                            <span id="sale-grand-total">&#8377;0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sale-payment-method">Payment Method</label>
+                        <select id="sale-payment-method" class="input-field">
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale-notes">Notes</label>
+                        <textarea id="sale-notes" class="input-field" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" id="btn-clear-sale">Clear</button>
+                        <button class="btn btn-primary" id="btn-complete-sale">Complete Sale & Generate Invoice</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Invoices Page -->
+        <section id="page-invoices" class="page">
+            <div class="page-header">
+                <h1>Invoices</h1>
+            </div>
+            <div class="filter-bar">
+                <input type="text" id="invoice-search" placeholder="Search by invoice #, customer..." class="input-field">
+                <input type="date" id="invoice-date-from" class="input-field">
+                <input type="date" id="invoice-date-to" class="input-field">
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="invoices-body"></tbody>
+            </table>
+        </section>
+
+        <!-- Invoice Detail Modal -->
+        <div id="invoice-modal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>Invoice</h2>
+                    <button class="btn-close" id="close-invoice-modal">&times;</button>
+                </div>
+                <div id="invoice-detail" class="invoice-print-area"></div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="btn-print-invoice">Print Invoice</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
