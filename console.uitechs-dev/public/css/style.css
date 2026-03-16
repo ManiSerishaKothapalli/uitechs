@@ -38,6 +38,8 @@ body {
     height: 100vh;
     padding: 20px 0;
     z-index: 100;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-header {
@@ -60,6 +62,17 @@ body {
 
 .nav-links {
     list-style: none;
+    flex: 1;
+}
+
+.sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-footer .btn {
+    width: 100%;
+    justify-content: center;
 }
 
 .nav-link {
@@ -255,6 +268,22 @@ h2 {
     margin-bottom: 6px;
 }
 
+.error-message {
+    font-size: 12px;
+    color: var(--danger);
+    margin-top: 4px;
+    display: block;
+    min-height: 16px;
+}
+
+.input-field.error {
+    border-color: var(--danger) !important;
+}
+
+.input-field.error:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
 .form-group .input-field,
 .form-group select,
 .form-group textarea {
@@ -264,6 +293,17 @@ h2 {
 textarea.input-field {
     resize: vertical;
     font-family: inherit;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
+.login-form .btn-full {
+    margin-top: 8px;
+    height: 48px;
+    font-size: 16px;
 }
 
 .form-actions {
@@ -346,6 +386,10 @@ textarea.input-field {
 
 .modal-large {
     max-width: 800px;
+}
+
+.modal-small {
+    max-width: 400px;
 }
 
 .modal-header {
@@ -532,6 +576,480 @@ textarea.input-field {
     font-weight: 600;
 }
 
+/* Loader */
+.loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+.loader.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border);
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+.loader p {
+    color: var(--text-light);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Toastr Custom Styles - Larger and Centered */
+#toast-container.toast-top-center {
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+#toast-container > div {
+    width: 450px !important;
+    max-width: 90vw;
+    font-size: 16px !important;
+    padding: 20px 25px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    margin: 0 0 15px 0 !important;
+    pointer-events: auto;
+    text-align: center;
+}
+
+#toast-container > .toast-success {
+    background-color: #16a34a !important;
+    background-image: none !important;
+}
+
+#toast-container > .toast-error {
+    background-color: #dc2626 !important;
+    background-image: none !important;
+}
+
+#toast-container > .toast-info {
+    background-color: #2563eb !important;
+    background-image: none !important;
+}
+
+#toast-container > .toast-warning {
+    background-color: #f59e0b !important;
+    background-image: none !important;
+}
+
+#toast-container > .toast-close-button {
+    font-size: 20px !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+}
+
+#toast-container > .toast-progress {
+    height: 4px !important;
+}
+
+/* Confirm dialog buttons in toastr */
+.toast-message button {
+    margin: 10px 5px 0 0;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toast-message .btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.toast-message .btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.toast-message .btn-secondary {
+    background: #64748b;
+    color: white;
+}
+
+.toast-message .btn-secondary:hover {
+    background: #475569;
+}
+
+/* Login Page Styles */
+.login-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.login-container {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-header h1 {
+    color: var(--primary);
+    margin-bottom: 8px;
+    font-size: 28px;
+}
+
+.login-header p {
+    color: var(--text-light);
+    margin-bottom: 32px;
+    font-size: 14px;
+}
+
+.login-form {
+    text-align: left;
+}
+
+/* Override any global input styles for login form */
+.login-form .input-field {
+    width: 100% !important;
+    padding: 12px 16px !important;
+    border: 2px solid var(--border) !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    transition: all 0.2s !important;
+    box-sizing: border-box !important;
+    height: 48px !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+
+.login-form .input-field:focus {
+    outline: none !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+.login-form .form-group {
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.login-form .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.password-input-container {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-container .input-field {
+    width: 100% !important;
+    padding: 12px 16px !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    height: 48px !important;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    z-index: 10;
+    margin: 0;
+    width: 32px;
+    height: 32px;
+}
+
+.eye-icon {
+    width: 16px;
+    height: 16px;
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.password-toggle:hover .eye-icon {
+    color: #374151;
+}
+
+/* Tooltip styles */
+.tooltip {
+    /* position: relative; */
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1f2937;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 119%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1f2937;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.tooltip:hover::after,
+.tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+.login-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.login-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.login-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* Registration Modal */
+.register-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+}
+
+.register-modal.active {
+    display: flex;
+}
+
+.register-modal-content {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.register-modal-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.register-modal-header h2 {
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.register-modal-header p {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+/* Role-based UI classes */
+.admin-only {
+    display: none;
+}
+
+.manager-only {
+    display: none;
+}
+
+.user-only {
+    display: block;
+}
+
+/* User info display */
+.user-info {
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.user-role {
+    font-size: 12px;
+    color: var(--text-light);
+    background: var(--border);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+/* Admin dashboard enhancements */
+.admin-controls {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 24px;
+}
+
+.admin-controls h3 {
+    margin-bottom: 16px;
+    color: var(--text);
+}
+
+.user-management-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+
+.user-management-table th,
+.user-management-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.user-management-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.role-badge {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-badge.admin {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.role-badge.manager {
+    background: #fefce8;
+    color: #ca8a04;
+}
+
+.role-badge.user {
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.main-app {
+    width: 100%;
+    height: 100vh;
+}
+
 /* Print Styles */
 @media print {
     body * {
@@ -558,6 +1076,16 @@ textarea.input-field {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .sidebar-footer {
+        padding: 20px;
+        border-top: 1px solid var(--border);
+        margin-top: auto;
+    }
+
+    .sidebar-footer .btn {
+        width: 100%;
+        font-size: 14px;
+    }
     .sidebar {
         width: 60px;
         overflow: hidden;

@@ -8,114 +8,107 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Supabase client
+// Serve index.html for all frontend routes
+app.get('/', (req, res) => res.sendFile(__dirname + '/public/index.html'));
+app.get('/dashboard', (req, res) => res.sendFile(__dirname + '/public/index.html'));
+app.get('/inventory', (req, res) => res.sendFile(__dirname + '/public/index.html'));
+app.get('/sales', (req, res) => res.sendFile(__dirname + '/public/index.html'));
+app.get('/invoices', (req, res) => res.sendFile(__dirname + '/public/index.html'));
+
+// Supabase client (server-side)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+// ============================================================
+// NOTE: Authentication is handled by Supabase Auth on the
+// frontend directly. No auth routes needed here.
+// Users are managed via: Supabase Dashboard → Authentication → Users
+// ============================================================
 
 // ============================================================
 // PRODUCTS API
 // ============================================================
 
-// Get all products
 app.get('/api/products', async (req, res) => {
     const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
-
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
 });
 
-// Get single product
 app.get('/api/products/:id', async (req, res) => {
     const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', req.params.id)
         .single();
-
     if (error) return res.status(404).json({ error: 'Product not found' });
     res.json(data);
 });
 
-// Create product
 app.post('/api/products', async (req, res) => {
     const { name, category, brand, model, serial_number, purchase_price, selling_price, stock, description } = req.body;
-
     if (!name || !category || purchase_price == null || selling_price == null || stock == null) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
-
     const { data, error } = await supabase
         .from('products')
-        .insert([{
-            name, category, brand, model, serial_number,
-            purchase_price, selling_price, stock, description
-        }])
+        .insert([{ name, category, brand, model, serial_number, purchase_price, selling_price, stock, description }])
         .select()
         .single();
-
     if (error) return res.status(500).json({ error: error.message });
     res.status(201).json(data);
 });
 
-// Update product
 app.put('/api/products/:id', async (req, res) => {
     const { name, category, brand, model, serial_number, purchase_price, selling_price, stock, description } = req.body;
-
     const { data, error } = await supabase
         .from('products')
-        .update({
-            name, category, brand, model, serial_number,
-            purchase_price, selling_price, stock, description
-        })
+        .update({ name, category, brand, model, serial_number, purchase_price, selling_price, stock, description })
         .eq('id', req.params.id)
         .select()
         .single();
-
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
 });
 
-// Delete product
 app.delete('/api/products/:id', async (req, res) => {
     const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', req.params.id);
-
     if (error) return res.status(500).json({ error: error.message });
     res.json({ message: 'Product deleted' });
 });
 
 // ============================================================
-// SALES / INVOICES API
+// INVOICES API
 // ============================================================
 
-// Get all invoices
 app.get('/api/invoices', async (req, res) => {
     const { data, error } = await supabase
         .from('invoices')
         .select('*, invoice_items(*)')
         .order('created_at', { ascending: false });
-
     if (error) return res.status(500).json({ error: error.message });
     res.json(data);
 });
 
-// Get single invoice
 app.get('/api/invoices/:id', async (req, res) => {
     const { data, error } = await supabase
         .from('invoices')
         .select('*, invoice_items(*)')
         .eq('id', req.params.id)
         .single();
-
     if (error) return res.status(404).json({ error: 'Invoice not found' });
     res.json(data);
 });
 
-// Create sale (invoice + items + stock update)
+// ============================================================
+// SALES API
+// ============================================================
+
 app.post('/api/sales', async (req, res) => {
     const { customer_name, customer_phone, customer_email, customer_address, items, tax_rate, payment_method, notes } = req.body;
 
@@ -123,21 +116,18 @@ app.post('/api/sales', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Generate invoice number
     const { count } = await supabase
         .from('invoices')
         .select('*', { count: 'exact', head: true });
 
     const invoiceNumber = 'INV-' + String((count || 0) + 1).padStart(5, '0');
 
-    // Calculate totals
     const subtotal = items.reduce((sum, item) => {
         return sum + (item.price * item.qty * (1 - (item.discount || 0) / 100));
     }, 0);
     const taxAmount = subtotal * (tax_rate || 0) / 100;
     const grandTotal = subtotal + taxAmount;
 
-    // Insert invoice
     const { data: invoice, error: invError } = await supabase
         .from('invoices')
         .insert([{
@@ -158,7 +148,6 @@ app.post('/api/sales', async (req, res) => {
 
     if (invError) return res.status(500).json({ error: invError.message });
 
-    // Insert invoice items
     const invoiceItems = items.map(item => ({
         invoice_id: invoice.id,
         product_id: item.product_id,
@@ -177,7 +166,6 @@ app.post('/api/sales', async (req, res) => {
 
     if (itemsError) return res.status(500).json({ error: itemsError.message });
 
-    // Update stock for each product
     for (const item of items) {
         const { data: product } = await supabase
             .from('products')
@@ -193,7 +181,6 @@ app.post('/api/sales', async (req, res) => {
         }
     }
 
-    // Return full invoice with items
     const { data: fullInvoice } = await supabase
         .from('invoices')
         .select('*, invoice_items(*)')
@@ -204,7 +191,7 @@ app.post('/api/sales', async (req, res) => {
 });
 
 // ============================================================
-// DASHBOARD STATS API
+// DASHBOARD API
 // ============================================================
 
 app.get('/api/dashboard', async (req, res) => {
@@ -219,19 +206,22 @@ app.get('/api/dashboard', async (req, res) => {
 
     const stats = {
         totalProducts: allProducts.length,
-        laptops: allProducts.filter(p => p.category === 'Laptop').length,
-        desktops: allProducts.filter(p => p.category === 'Desktop').length,
+        laptops:    allProducts.filter(p => p.category === 'Laptop').length,
+        desktops:   allProducts.filter(p => p.category === 'Desktop').length,
         spareParts: allProducts.filter(p => p.category !== 'Laptop' && p.category !== 'Desktop').length,
         totalSales: allInvoices.length,
-        revenue: allInvoices.reduce((sum, inv) => sum + Number(inv.grand_total), 0),
+        revenue:    allInvoices.reduce((sum, inv) => sum + Number(inv.grand_total), 0),
         recentSales: allInvoices.slice(0, 5),
-        lowStock: allProducts.filter(p => p.stock <= 3).sort((a, b) => a.stock - b.stock).slice(0, 5),
+        lowStock:   allProducts.filter(p => p.stock <= 3).sort((a, b) => a.stock - b.stock).slice(0, 5),
     };
 
     res.json(stats);
 });
 
-// Start server
+// ============================================================
+// START SERVER
+// ============================================================
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`U&I Technologies server running at http://localhost:${PORT}`);
