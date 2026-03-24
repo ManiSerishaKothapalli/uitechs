@@ -80,7 +80,23 @@ async function login(email, password) {
 // Logout via Supabase Auth
 async function logout() {
     await supabaseClient.auth.signOut();
+    
+    // Clear all session storage data
+    sessionStorage.clear();
+    localStorage.clear();
+    
+    // Clear any form data
+    document.getElementById('login-form')?.reset();
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    
+    // Show login page
     showLoginPage();
+    
+    // Force redirect to base URL to clear any cached data
+    setTimeout(() => {
+        window.location.href = '/';
+    }, 100);
 }
 
 // Update sidebar with logged-in user info
@@ -400,11 +416,79 @@ async function renderInventory() {
 document.getElementById('inventory-search').addEventListener('input', renderInventory);
 document.getElementById('inventory-filter').addEventListener('change', renderInventory);
 
+// FIXED: Stock quantity change listener for serial numbers
+document.getElementById('product-stock').addEventListener('input', function(e) {
+    e.stopPropagation(); // Prevent event bubbling to modal
+    const quantity = parseInt(this.value) || 0;
+    updateSerialNumberFields(quantity);
+});
+
+// FIXED: Also handle blur for when user tabs out
+document.getElementById('product-stock').addEventListener('blur', function(e) {
+    e.stopPropagation(); // Prevent event bubbling to modal
+    const quantity = parseInt(this.value) || 0;
+    updateSerialNumberFields(quantity);
+});
+
+// FIXED: Prevent form submission on Enter key
+document.getElementById('product-stock').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault(); // This prevents form submission
+        e.stopPropagation(); // Stop event from bubbling up
+        this.blur(); // Trigger blur event to update serial inputs
+        return false; // Extra safety
+    }
+});
+
+// FIXED: Helper function to update serial number fields
+function updateSerialNumberFields(quantity) {
+    const serialContainer = document.getElementById('serial-numbers-container');
+    const serialList = document.getElementById('serial-numbers-list');
+    const singleSerialFormGroup = document.getElementById('product-serial').closest('.form-group');
+
+    if (quantity > 1) {
+        singleSerialFormGroup.style.display = 'none';
+        serialContainer.style.display = 'block';
+
+        serialList.innerHTML = '';
+        
+        // Add label header
+        const label = document.createElement('label');
+        label.textContent = 'Serial Numbers';
+        label.style.display = 'block';
+        label.style.marginBottom = '8px';
+        label.style.fontWeight = '500';
+        label.style.fontSize = '14px';
+        serialList.appendChild(label);
+
+        for (let i = 1; i <= quantity; i++) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'input-field';
+            input.placeholder = `Serial Number ${i}`;
+            input.id = `serial-${i}`;
+            input.style.marginBottom = '8px';
+            serialList.appendChild(input);
+        }
+    } else {
+        // Show single serial form-group again
+        singleSerialFormGroup.style.display = 'block';
+        serialContainer.style.display = 'none';
+        serialList.innerHTML = '';
+    }
+}
+
 // Add Product button
 document.getElementById('btn-add-product').addEventListener('click', () => {
     document.getElementById('product-modal-title').textContent = 'Add Product';
     document.getElementById('product-form').reset();
     document.getElementById('product-id').value = '';
+    
+    // Reset serial number inputs
+    document.getElementById('serial-numbers-container').style.display = 'none';
+    document.getElementById('serial-numbers-list').innerHTML = '';
+    document.getElementById('product-serial').closest('.form-group').style.display = 'block';
+    
     document.getElementById('product-modal').classList.add('active');
 });
 
@@ -420,13 +504,30 @@ document.getElementById('cancel-product').addEventListener('click', () => {
 document.getElementById('product-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('product-id').value;
+    const quantity = parseInt(document.getElementById('product-stock').value) || 0;
+    
+    let serialNumbers = '';
+    if (quantity > 1) {
+        // Collect multiple serial numbers
+        const serials = [];
+        for (let i = 1; i <= quantity; i++) {
+            const serialInput = document.getElementById(`serial-${i}`);
+            if (serialInput && serialInput.value.trim()) {
+                serials.push(serialInput.value.trim());
+            }
+        }
+        serialNumbers = serials.join(', ');
+    } else {
+        // Single serial number
+        serialNumbers = document.getElementById('product-serial').value.trim();
+    }
 
     const productData = {
         name: document.getElementById('product-name').value.trim(),
         category: document.getElementById('product-category').value,
         brand: document.getElementById('product-brand').value.trim(),
         model: document.getElementById('product-model').value.trim(),
-        serial_number: document.getElementById('product-serial').value.trim(),
+        serial_number: serialNumbers,
         purchase_price: parseFloat(document.getElementById('product-purchase-price').value),
         selling_price: parseFloat(document.getElementById('product-selling-price').value),
         stock: parseInt(document.getElementById('product-stock').value),
@@ -469,6 +570,21 @@ async function editProduct(id) {
         document.getElementById('product-selling-price').value = p.selling_price;
         document.getElementById('product-stock').value = p.stock;
         document.getElementById('product-description').value = p.description || '';
+        
+        // Handle serial number display based on stock quantity
+        const quantity = p.stock || 0;
+        if (quantity > 1) {
+            updateSerialNumberFields(quantity);
+            // Populate serial numbers if they exist
+            const serials = p.serial_number ? p.serial_number.split(',').map(s => s.trim()) : [];
+            for (let i = 1; i <= quantity; i++) {
+                const input = document.getElementById(`serial-${i}`);
+                if (input && serials[i-1]) {
+                    input.value = serials[i-1];
+                }
+            }
+        }
+        
         document.getElementById('product-modal').classList.add('active');
     } catch (error) {
         console.error('Error loading product for edit:', error);
@@ -785,7 +901,6 @@ document.getElementById('btn-complete-sale').addEventListener('click', async () 
     }
 
     const taxRate = parseFloat(document.getElementById('sale-tax').value) || 0;
-    const paymentMethod = document.getElementById('sale-payment-method').value;
     const notes = document.getElementById('sale-notes').value.trim();
 
     const saleData = {
@@ -795,7 +910,6 @@ document.getElementById('btn-complete-sale').addEventListener('click', async () 
         customer_address: document.getElementById('customer-address').value.trim() || null,
         items: saleItems,
         tax_rate: taxRate,
-        payment_method: paymentMethod,
         notes: notes || null
     };
 
@@ -840,7 +954,13 @@ async function renderInvoices() {
         });
 
         const tbody = document.getElementById('invoices-body');
-        tbody.innerHTML = filtered.map(inv => `
+        tbody.innerHTML = filtered.map(inv => {
+            // Determine payment status
+            // const paymentStatus = inv.payment_status || 'pending';
+            // const paymentStatusClass = paymentStatus === 'paid' ? 'status-paid' : 'status-pending';
+            // const paymentStatusText = paymentStatus === 'paid' ? 'Paid' : 'Pending';
+            
+            return `
             <tr>
                 <td><strong>${inv.invoice_number}</strong></td>
                 <td>${formatDate(inv.created_at)}</td>
@@ -848,12 +968,12 @@ async function renderInvoices() {
                 <td>${escapeHtml(inv.customer_phone)}</td>
                 <td>${inv.invoice_items ? inv.invoice_items.length : 0}</td>
                 <td>&#8377;${formatNum(inv.grand_total)}</td>
-                <td>${inv.payment_method}</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="showInvoice('${inv.invoice_number}')">View</button>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
     } catch (error) {
         console.error('Error loading invoices:', error);
         showError('Error loading invoices. Please try again.');
@@ -878,71 +998,168 @@ async function showInvoice(invoiceNumber) {
 
         const detail = document.getElementById('invoice-detail');
         detail.innerHTML = `
-            <div class="invoice-header">
-                <h1>U&I Technologies</h1>
-                <p>Laptop, Desktop & Spare Parts - Sales & Service</p>
-            </div>
-            <div class="invoice-meta">
-                <div>
-                    <strong>Invoice To</strong>
-                    ${escapeHtml(inv.customer_name)}<br>
-                    ${inv.customer_phone ? 'Phone: ' + escapeHtml(inv.customer_phone) + '<br>' : ''}
-                    ${inv.customer_email ? 'Email: ' + escapeHtml(inv.customer_email) + '<br>' : ''}
-                    ${inv.customer_address ? escapeHtml(inv.customer_address) : ''}
+            <div class="invoice-container">
+                <!-- Invoice Header -->
+                <div class="invoice-header-section">
+                    <div class="invoice-left">
+                        <div class="invoice-title">
+                            <h1>Invoice</h1>
+                            <h2>Sales of Service</h2>
+                        </div>
+                        <div class="invoice-details-left">
+                            <div class="detail-row">
+                                <span>Invoice No #:</span>
+                                <span>${inv.invoice_number}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span>Invoice Date:</span>
+                                <span>${formatDate(inv.created_at)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="invoice-right">
+                        <div class="company-logo">
+                            <div class="logo-circle">U&IT</div>
+                            <div class="company-name">
+                                <strong>U & I Technologies</strong><br>
+                                <span>Solutions for every needs</span>
+                            </div>
+                        </div>
+                        <div class="invoice-details-right">
+                            <div class="detail-row">
+                                <span>PO Number #:</span>
+                                <span>PO-${inv.invoice_number}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span>PO Date:</span>
+                                <span>${formatDate(inv.created_at)}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div style="text-align:right;">
-                    <strong>Invoice Details</strong>
-                    Invoice #: ${inv.invoice_number}<br>
-                    Date: ${formatDate(inv.created_at)}<br>
-                    Payment: ${inv.payment_method}
+
+                <!-- Billed By and Billed To -->
+                <div class="invoice-parties">
+                    <div class="billed-by">
+                        <h3>Billed By:</h3>
+                        <div class="party-details">
+                            <p><strong>U&I Technologies</strong></p>
+                            <p>66, Nagappa Block, 3rd Cross, Srirampura</p>
+                            <p>Bengaluru, karnataka- 560021</p>
+                            <p>Bengaluru</p>
+                            <p>GSTIN: 29KTTPS2968P1ZX</p>
+                            <p>PAN: KTTPS2968P</p>
+                            <p>Email: uitechsup@gmail.com</p>
+                            <p>Mobile: +91 9606752864</p>
+                        </div>
+                    </div>
+                    <div class="billed-to">
+                        <h3>Billed To:</h3>
+                        <div class="party-details">
+                            <p><strong>${escapeHtml(inv.customer_name)}</strong></p>
+                            ${inv.customer_address ? `<p>${escapeHtml(inv.customer_address)}</p>` : ''}
+                            <p>Mobile: ${escapeHtml(inv.customer_phone)}</p>
+                            ${inv.customer_email ? `<p>Email: ${escapeHtml(inv.customer_email)}</p>` : ''}
+                            <p>GSTIN: N/A</p>
+                            <p>PAN: N/A</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <table class="invoice-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Product</th>
-                        <th>Price</th>
-                        <th>Qty</th>
-                        <th>Discount</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${inv.invoice_items ? inv.invoice_items.map((item, i) => {
+
+                <!-- Items Table -->
+                <table class="invoice-items-table">
+                    <thead>
+                        <tr>
+                            <th>SI No</th>
+                            <th>Descriptions</th>
+                            <th>GST Rate</th>
+                            <th>Quantity</th>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                            <th>CGST</th>
+                            <th>SGST</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${inv.invoice_items ? inv.invoice_items.map((item, i) => {
                         const itemTotal = item.price * item.quantity * (1 - item.discount / 100);
+                        const gstRate = inv.tax_rate || 0;
+                        const cgst = (itemTotal * gstRate / 100) / 2;
+                        const sgst = (itemTotal * gstRate / 100) / 2;
+                        const hsnCode = item.product_brand === 'Samsung' ? '8517' : item.product_brand === 'Google' ? '8517' : item.product_brand === 'Apple' ? '8517' : '8517';
+                        const serialNumber = item.product_model || `SSTS-AMD-${1000 + i}`;
                         return `
                             <tr>
                                 <td>${i + 1}</td>
-                                <td>${escapeHtml(item.product_name)} (${escapeHtml(item.product_brand || '')} ${escapeHtml(item.product_model || '')})</td>
-                                <td>&#8377;${formatNum(item.price)}</td>
+                                <td>${escapeHtml(item.product_name)} ${serialNumber}<br><small>${hsnCode}</small></td>
+                                <td>${gstRate}%</td>
                                 <td>${item.quantity}</td>
-                                <td>${item.discount}%</td>
+                                <td>&#8377;${formatNum(item.price)}</td>
+                                <td>&#8377;${formatNum(item.price * item.quantity)}</td>
+                                <td>&#8377;${formatNum(cgst)}</td>
+                                <td>&#8377;${formatNum(sgst)}</td>
                                 <td>&#8377;${formatNum(itemTotal)}</td>
                             </tr>
                         `;
                     }).join('') : ''}
-                </tbody>
-            </table>
-            <div class="invoice-totals">
-                <table>
-                    <tr>
-                        <td>Subtotal:</td>
-                        <td style="text-align:right">&#8377;${formatNum(inv.subtotal)}</td>
-                    </tr>
-                    <tr>
-                        <td>Tax (GST ${inv.tax_rate}%):</td>
-                        <td style="text-align:right">&#8377;${formatNum(inv.tax_amount)}</td>
-                    </tr>
-                    <tr class="grand-total">
-                        <td>Grand Total:</td>
-                        <td style="text-align:right">&#8377;${formatNum(inv.grand_total)}</td>
-                    </tr>
+                    </tbody>
                 </table>
-            </div>
-            ${inv.notes ? `<p style="margin-top:16px;font-size:13px;color:#64748b"><strong>Notes:</strong> ${escapeHtml(inv.notes)}</p>` : ''}
-            <div class="invoice-footer">
-                <p>Thank you for your business!</p>
+
+                <!-- Bank Details and Total -->
+                <div class="invoice-footer-section">
+                    <div class="bank-details">
+                        <h3>Bank Details</h3>
+                        <div class="bank-info">
+                            <div class="bank-row">
+                                <span>Account Holder Name:</span>
+                                <span>U&I Technologies</span>
+                            </div>
+                            <div class="bank-row">
+                                <span>Account Number:</span>
+                                <span>50200057871189</span>
+                            </div>
+                            <div class="bank-row">
+                                <span>IFSC:</span>
+                                <span>HSBC0600002</span>
+                            </div>
+                            <div class="bank-row">
+                                <span>Account Type:</span>
+                                <span>Current Account</span>
+                            </div>
+                            <div class="bank-row">
+                                <span>Bank Name:</span>
+                                <span>HSBC Bank</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="total-section">
+                        <h3>Total (INR)</h3>
+                        <div class="total-info">
+                            <div class="total-row">
+                                <span>Amount:</span>
+                                <span>&#8377;${formatNum(inv.subtotal)}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>SGST:</span>
+                                <span>&#8377;${formatNum(inv.tax_amount / 2)}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>CGST:</span>
+                                <span>&#8377;${formatNum(inv.tax_amount / 2)}</span>
+                            </div>
+                            <div class="total-row grand-total-row">
+                                <span>Total (INR):</span>
+                                <span>&#8377;${formatNum(inv.grand_total)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Note -->
+                <div class="invoice-note">
+                    <p>This is Computer Generated Document doesn't Require signature</p>
+                </div>
             </div>
         `;
 
@@ -976,7 +1193,7 @@ async function refreshDashboard() {
         document.getElementById('stat-total-products').textContent = stats.totalProducts;
         document.getElementById('stat-laptops').textContent = stats.laptops;
         document.getElementById('stat-desktops').textContent = stats.desktops;
-        document.getElementById('stat-parts').textContent = stats.spareParts;
+        document.getElementById('stat-parts').textContent = stats.accessories;
         document.getElementById('stat-total-sales').textContent = stats.totalSales;
         document.getElementById('stat-revenue').innerHTML = '&#8377;' + formatNum(stats.revenue);
 
@@ -1078,14 +1295,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Close modals on outside click
-document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-        }
-    });
-});
 
 // Delete confirmation modal event listeners
 document.getElementById('close-delete-modal').addEventListener('click', () => {
@@ -1172,42 +1381,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
-
-// ============================================================
-// DASHBOARD MODULE
-// ============================================================
-
-async function refreshDashboard() {
-    try {
-        const stats = await API.get('/api/dashboard');
-
-        document.getElementById('stat-total-products').textContent = stats.totalProducts;
-        document.getElementById('stat-laptops').textContent = stats.laptops;
-        document.getElementById('stat-desktops').textContent = stats.desktops;
-        document.getElementById('stat-parts').textContent = stats.spareParts;
-        document.getElementById('stat-total-sales').textContent = stats.totalSales;
-        document.getElementById('stat-revenue').innerHTML = '&#8377;' + formatNum(stats.revenue);
-
-        // Recent sales (last 5)
-        document.getElementById('recent-sales-body').innerHTML = stats.recentSales.map(inv => `
-            <tr>
-                <td><strong>${inv.invoice_number}</strong></td>
-                <td>${escapeHtml(inv.customer_name)}</td>
-                <td>${formatDate(inv.created_at)}</td>
-                <td>&#8377;${formatNum(inv.grand_total)}</td>
-            </tr>
-        `).join('') || '<tr><td colspan="4" style="text-align:center;color:#94a3b8">No sales yet</td></tr>';
-
-        // Low stock (stock <= 3)
-        document.getElementById('low-stock-body').innerHTML = stats.lowStock.map(p => `
-            <tr>
-                <td>${escapeHtml(p.name)}</td>
-                <td>${escapeHtml(p.category)}</td>
-                <td class="stock-low">${p.stock}</td>
-            </tr>
-        `).join('') || '<tr><td colspan="3" style="text-align:center;color:#94a3b8">All items well stocked</td></tr>';
-    } catch (error) {
-        console.error('Error loading dashboard:', error);
-        showError('Error loading dashboard. Please try again.');
-    }
-}

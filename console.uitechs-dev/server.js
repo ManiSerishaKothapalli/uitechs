@@ -110,7 +110,7 @@ app.get('/api/invoices/:id', async (req, res) => {
 // ============================================================
 
 app.post('/api/sales', async (req, res) => {
-    const { customer_name, customer_phone, customer_email, customer_address, items, tax_rate, payment_method, notes } = req.body;
+    const { customer_name, customer_phone, customer_email, customer_address, items, tax_rate, notes } = req.body;
 
     if (!customer_name || !customer_phone || !items || items.length === 0) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -140,7 +140,6 @@ app.post('/api/sales', async (req, res) => {
             tax_rate: tax_rate || 0,
             tax_amount: taxAmount,
             grand_total: grandTotal,
-            payment_method: payment_method || 'Cash',
             notes: notes || null,
         }])
         .select()
@@ -208,7 +207,7 @@ app.get('/api/dashboard', async (req, res) => {
         totalProducts: allProducts.length,
         laptops:    allProducts.filter(p => p.category === 'Laptop').length,
         desktops:   allProducts.filter(p => p.category === 'Desktop').length,
-        spareParts: allProducts.filter(p => p.category !== 'Laptop' && p.category !== 'Desktop').length,
+        accessories: allProducts.filter(p => p.category !== 'Laptop' && p.category !== 'Desktop').length,
         totalSales: allInvoices.length,
         revenue:    allInvoices.reduce((sum, inv) => sum + Number(inv.grand_total), 0),
         recentSales: allInvoices.slice(0, 5),

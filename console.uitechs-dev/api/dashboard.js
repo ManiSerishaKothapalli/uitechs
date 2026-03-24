@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
                 totalProducts: allProducts.length,
                 laptops: allProducts.filter(p => p.category === 'Laptop').length,
                 desktops: allProducts.filter(p => p.category === 'Desktop').length,
-                spareParts: allProducts.filter(p => p.category !== 'Laptop' && p.category !== 'Desktop').length,
+                accessories: allProducts.filter(p => p.category !== 'Laptop' && p.category !== 'Desktop').length,
                 totalSales: allInvoices.length,
                 revenue: allInvoices.reduce((sum, inv) => sum + Number(inv.grand_total), 0),
                 recentSales: allInvoices.slice(0, 5),

@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'POST') {
         try {
-            const { customer_name, customer_phone, customer_email, customer_address, items, tax_rate, payment_method, notes } = req.body;
+            const { customer_name, customer_phone, customer_email, customer_address, items, tax_rate, notes } = req.body;
 
             if (!customer_name || !customer_phone || !items || items.length === 0) {
                 return res.status(400).json({ error: 'Missing required fields' });
@@ -44,7 +44,6 @@ module.exports = async function handler(req, res) {
                     tax_rate: tax_rate || 0,
                     tax_amount: taxAmount,
                     grand_total: grandTotal,
-                    payment_method: payment_method || 'Cash',
                     notes: notes || null,
                 }])
                 .select()
